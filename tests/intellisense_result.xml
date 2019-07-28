@@ -1,0 +1,55 @@
+<IntelliSense>
+   <suggest>
+      <item>
+         <caret>9</caret>
+         <completion start="0" end="2"/>
+         <description>by updated</description>
+         <match start="0" end="2"/>
+         <option>updated</option>
+         <styleClass>keyword</styleClass>
+         <suffix>:</suffix>
+      </item>
+      <item>
+         <caret>12</caret>
+         <completion start="0" end="2"/>
+         <description>by updater</description>
+         <match start="0" end="2"/>
+         <option>updated by</option>
+         <styleClass>keyword</styleClass>
+         <suffix>:</suffix>
+      </item>
+   </suggest>
+   <recent>
+      <recentItem>
+         <caret>0</caret>
+         <completion start="0" end="0"/>
+         <description>Recent Searches</description>
+         <match start="0" end="0"/>
+      </recentItem>
+      <recentItem>
+         <caret>43</caret>
+         <completion start="0" end="2"/>
+         <description>&amp;nbsp;</description>
+         <htmlDescription>true</htmlDescription>
+         <match start="22" end="24"/>
+         <option>updated: Today</option>
+         <styleClass>field</styleClass>
+      </recentItem>
+      <recentItem>
+         <caret>18</caret>
+         <completion start="0" end="2"/>
+         <description>&amp;nbsp;</description>
+         <htmlDescription>true</htmlDescription>
+         <match start="0" end="2"/>
+         <option>updated: Yesterday</option>
+         <styleClass>field</styleClass>
+      </recentItem>
+   </recent>
+   <highlight>
+      <range>
+         <styleClass>string</styleClass>
+         <start>0</start>
+         <end>2</end>
+      </range>
+   </highlight>
+</IntelliSense>
