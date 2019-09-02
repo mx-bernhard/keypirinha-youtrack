@@ -11,34 +11,70 @@
 ```ini
 [server/my-server1]
 
-# enable = true
 # youtrack base url
-base_url = https://youtrack.jetbrains.com
+#base_url = https://youtrack.myserver1.com
 
 # the token for auth - is required and starts with perm:
-api_token = perm:... 
+#api_token = 
 
-filter_label = YouTrack Jetbrains (filter)
-issues_label = YouTrack Jetbrains (issues)
+# displayed entry text 
+#issues_label = My bugtracker (issues)
 
-issues_icon = youtrack
-filter_icon = youtrack
+# defaults to "youtrack"
+#issues_icon = youtrack
+
+# displayed entry text 
+#filter_label = My bugtracker (filter)
+
+# defaults to "youtrack"
+#filter_icon = youtrack
+
+# is prefixed to the entered filter
+# Note: you can add the same server twice but with a different filter
+#filter =
+
+# disables the automatic whitespace added after the prefix filter, defaults to False
+#filter_dont_append_whitespace=False
 
 [server/my-server2]
 
-# enable = true
 # youtrack base url
-base_url = https://youtrack-server.foo.com
+#base_url = https://youtrack.myserver2.com
 
 # the token for auth - is required and starts with perm:
-api_token = perm:... 
+#api_token = 
 
-filter_label = YouTrack Foo (filter)
-issues_label = YouTrack Foo (issues)
+# displayed entry text 
+#issues_label = My bugtracker (issues)
 
-issues_icon = youtrack
-filter_icon = youtrack
+# defaults to "youtrack"
+#issues_icon = youtrack
+
+# displayed entry text 
+#filter_label = My bugtracker (filter)
+
+# defaults to "youtrack"
+#filter_icon = youtrack
+
+# is prefixed to the entered filter
+# Note: you can add the same server twice but with a different filter
+#filter =
+
+# disables the automatic whitespace added after the prefix filter, defaults to False
+#filter_dont_append_whitespace=False
 ```
+
+* You can add the same server more than once but use different `filter` values that are prefixed to all queries. 
+* A space is added to the end of the prefix before the user input so that suggestions do not target the prefix 
+* Put your png icons in a subfolder youtrack and prefix them with `icon_` - in the example below ´test´ and ´xyz´ are valid identifiers in the ´youtrack.ini´:
+```
++
+|– youtrack.ini
+|– youtrack/
+   |– icon_test.png
+   |– icon_xyz.png
+```
+
 ## Features
 
 ### Filter mode
