@@ -168,7 +168,7 @@ class YouTrackServer():
         for issue in issues:
             suggestions.append(self.plugin.create_item(
                 category=self.plugin.ITEMCAT_ISSUES,
-                label=issue.summary,
+                label=issue.summary + " [" + issue.id + "]",
                 short_desc=
                     issue.id +
                     (" ▶ " + issue.description if issue.description is not None else ""),
