@@ -1,0 +1,22 @@
+name: create release
+
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: montudor/action-zip@v1
+      with:
+        args: zip -qq -r youtrack.keypirinha-package youtrack.ini youtrack.py youtrack_server.py icons/icon_youtrack.png lib
+    - name: Set env
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV        
+    - name: Upload Release
+      uses: ncipollo/release-action@v1
+      with:
+        name: Release ${{ env.RELEASE_VERSION }}
+        artifacts: "youtrack.keypirinha-package"
+        token: ${{ secrets.GITHUB_TOKEN }}      
