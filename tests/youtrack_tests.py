@@ -2,7 +2,7 @@ import os
 import unittest
 from typing import Sequence
 
-from lib.api import Api, IntellisenseResult
+from lib.api import Api, SuggestionResult
 
 TESTDATA_FILENAME = os.path.join(os.path.dirname(__file__), 'intellisense_result.xml')
 
@@ -16,11 +16,11 @@ class TestApi:
         fixture = Api("no token", "https://foo.com", dummyDbg)
         #fixture.get_intellisense_suggestions("test")
 
-        res: Sequence[IntellisenseResult] = fixture.parse_intellisense_suggestions(self.testdata.encode("UTF-8"))
+        res: Sequence[SuggestionResult] = fixture.parse_suggestions_response(self.testdata.encode("UTF-8"))
         assert len(res) == 4
-        assert self.equals(res[0],IntellisenseResult(start=0,end=2,description="by updated",option="updated",full_option="updated:",prefix=None,suffix=":"))
+        assert self.equals(res[0], SuggestionResult(start=0, end=2, description="by updated", option="updated", full_option="updated:", prefix=None, suffix=":"))
 
-    def equals(self, one:IntellisenseResult, two:IntellisenseResult):
+    def equals(self, one:SuggestionResult, two:SuggestionResult):
         return one.description == two.description \
                and one.suffix == two.suffix \
                and one.end ==two.end \

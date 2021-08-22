@@ -1,10 +1,25 @@
 # YouTrack plugin for Keypirinha
 
+## Changelog
+
+### Version 1.2
+
+#### YouTrack API
+This plugin has been using the YouTrack Legacy API since its first version. This API recently was disabled on current versions of YouTrack. The default API is now `/api/...` instead of `/rest/...`. A `legacy_api` switch is available to go back to the old api in case the affected server is on an older version and does *not* have the newer api yet. The default for `legacy_api` is `False`.
+
+#### max_results support
+
+It is now possible to restrict the amount of results per YouTrack server. If not supplied the `max_results` configuration of Keypirinha is used. An information is displayed how many results came back from the YouTrack API. If the result exceeded the amount set by `max_results`, this is also shown.
+
 ## Installation
-* Copy YouTrack.keypirinha-package to
-```
-<Keypirinha root>\portable\Profile\Packages
-```
+
+* Recommended: use [PackageControl](https://ue.spdns.de/packagecontrol/) to install
+* Alternative: Copy YouTrack.keypirinha-package to
+  ```
+  <Keypirinha root>\portable\Profile\Packages
+  ```
+
+## Configuration 
 * Edit `youtrack.ini` by issuing `Keypirinha: Configure Package: youtrack`
 * In youtrack.ini you can add as many YouTrack-servers as you like by adding sections:
 
@@ -36,6 +51,9 @@
 # disables the automatic whitespace added after the prefix filter, defaults to False
 #filter_dont_append_whitespace=False
 
+# legacy api (available in versions before July 2021), defaults to False
+#legacy_api = False
+
 [server/my-server2]
 
 # youtrack base url
@@ -62,6 +80,9 @@
 
 # disables the automatic whitespace added after the prefix filter, defaults to False
 #filter_dont_append_whitespace=False
+
+# legacy api (available in versions before July 2021), defaults to False
+#legacy_api = False
 ```
 
 * You can add the same server more than once but use different `filter` values that are prefixed to all queries. 
