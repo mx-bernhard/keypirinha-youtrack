@@ -47,7 +47,10 @@ class YouTrack(kp.Plugin):
         self._load_icons()
 
     def _read_config(self):
+        kp_settings = keypirinha.settings()
+
         settings = self.load_settings()
+        app_max_results = kp_settings.get_int("max_results", "gui", 100)
         self.idle_time = settings.get_float(
             "idle_time", self.CONFIG_SECTION_MAIN,
             fallback=self.DEFAULT_IDLE_TIME, min=0.25, max=3)
@@ -74,9 +77,14 @@ class YouTrack(kp.Plugin):
                     ('YouTrack server "{}" declared more than once. ' +
                     'Ignoring subsequent declarations').format(server_label))
                 continue
-
+            max_results = settings.get_int("max_results", section, app_max_results)
+            max_search_results = max_results
+            if max_results > app_max_results:
+                max_results = app_max_results
+            if max_search_results + 2 > app_max_results:
+                max_search_results = app_max_results - 2
             try:
-                server_ = YouTrackServer(self, server_name)
+                server_ = YouTrackServer(self, server_name, max_results, max_search_results)
                 server_.init_from_config(settings, section)
                 self.servers[server_name] = server_
             except ValueError as exc:
@@ -201,7 +209,7 @@ class YouTrack(kp.Plugin):
 
     def on_events(self, flags):
         self.dbg('on_events')
-        if flags & kp.Events.PACKCONFIG:
+        if flags & kp.Events.PACKCONFIG or flags & kp.Events.APPCONFIG:
             self.info("Configuration changed, rebuilding catalog...")
             self._read_config()
             self._load_icons()
