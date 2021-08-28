@@ -5,7 +5,7 @@ def do_nothing(*args):
     pass
 
 
-api = Api('perm:YjNybmhhcmQ=.a2V5cGlyaW5oYUBob21l.fuW8XVvgPBgoWH3fueIijP1ewBSVGS', 'https://youtrack.jetbrains.com', do_nothing)
+api = Api('<token>', '<url>', do_nothing)
 
 
 def suggestions():
