@@ -31,6 +31,17 @@ class YouTrack(kp.Plugin):
     RES_ICON_CONFIG_PATH = 'youtrack/icon_{name}.png'
     CACHE_ICON_CONFIG_PATH = 'cache://youtrack/icon_{name}.png'
 
+    def print(self, **kwargs):
+        to_print = self.args_to_string_impl(kwargs)
+        self.dbg("[" + to_print + "]")
+
+    def args_to_string_impl(self, kwargs):
+        to_print = str.join(",", [key + " = \"" + str(value) + "\"" for key, value in kwargs.items()])
+        return to_print
+
+    def args_to_string(self, **kwargs):
+        return self.args_to_string_impl(kwargs)
+
     def __init__(self):
         self.dbg('__init__')
         super().__init__()
@@ -64,7 +75,7 @@ class YouTrack(kp.Plugin):
                 continue
 
             server_enabled = settings.get_bool("enable", section, fallback=True)
-            if (not server_enabled):
+            if not server_enabled:
                 continue
             server_name = server_label.lower()
 
@@ -74,16 +85,15 @@ class YouTrack(kp.Plugin):
             if server_name in self.servers:
                 self.warn(
                     ('YouTrack server "{}" declared more than once. ' +
-                    'Ignoring subsequent declarations').format(server_label))
+                     'Ignoring subsequent declarations').format(server_label))
                 continue
             max_results = settings.get_int("max_results", section, app_max_results)
-            max_search_results = max_results
             if max_results > app_max_results:
                 max_results = app_max_results
-            if max_search_results + 2 > app_max_results:
-                max_search_results = app_max_results - 2
+
             try:
-                server_ = YouTrackServer(self, server_name, max_results, max_search_results)
+                self.print(server_name=server_name)
+                server_ = YouTrackServer(self, server_name, max_results)
                 server_.init_from_config(settings, section)
                 self.servers[server_name] = server_
             except ValueError as exc:
@@ -119,14 +129,13 @@ class YouTrack(kp.Plugin):
         catalog = []
         for server_name, server in self.servers.items():
             self.set_default_icon(self._icons[ICON_KEY_DEFAULT])
-            self.info("Creating catalog entry for server name={name}, issues_label={issues_label}, filter_label={filter_label}, server_name={server_name}, issues_icon={issues_icon}, filter_icon={filter_icon},filter={filter}".format(
-                filter_icon=server.filter_icon,
-                issues_icon=server.issues_icon,
+            self.info("Creating catalog entry for server " + self.args_to_string(
+                name=server.name,
                 issues_label=server.issues_label,
                 filter_label=server.filter_label,
-                server_name=server_name,
-                name=server.name,
-                filter=server.filter_prefix))
+                issues_icon=server.issues_icon,
+                filter_icon=server.filter_icon,
+                filter_prefix=server.filter_prefix))
             catalog.append(self.create_item(
                 category=self.ITEMCAT_FILTER,
                 label=server.filter_label,
@@ -145,10 +154,22 @@ class YouTrack(kp.Plugin):
                 icon_handle=self._icons[server.issues_icon]))
         self.set_catalog(catalog)
 
+    def print_items(self, items_chain):
+        join = ", ".join([self.item_to_str(item) for item in items_chain])
+        self.dbg(join)
+
+    def item_to_str(self, item):
+        return f'(label={item.label()}, short_desc={item.short_desc()}, target={item.target()}, hit_hint={item.hit_hint()}, args_hint={item.args_hint()}, data_bag={item.data_bag()})'
+
     def on_suggest(self, user_input: str, items_chain: List):
-        if not items_chain or items_chain[0].category() not in [self.ITEMCAT_FILTER, self.ITEMCAT_ISSUES, self.ITEMCAT_SWITCH]:
+        if not items_chain \
+                or items_chain[0].category() not in \
+                [self.ITEMCAT_FILTER,
+                 self.ITEMCAT_ISSUES,
+                 self.ITEMCAT_SWITCH]:
             return
         current_item = items_chain[0]
+        self.print_items(items_chain)
         target_props = kpu.kwargs_decode(current_item.target())
         server_name = target_props['server']
 

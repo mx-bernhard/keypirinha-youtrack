@@ -1,11 +1,14 @@
+import sys
+
 from lib.api import Api
 
 
 def do_nothing(*args):
     pass
 
-
-api = Api('<token>', '<url>', do_nothing)
+token = sys.argv[1]
+url = sys.argv[2]
+api = Api(token, url, do_nothing, max_results=100)
 
 
 def suggestions():

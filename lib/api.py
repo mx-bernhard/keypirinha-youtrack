@@ -117,14 +117,12 @@ class Api:
     def parse_list_of_issues_result(self, response: str) -> Sequence[Issue]:
         issues: Sequence[Issue] = []
         for item in response:
-            self.print(item=str(item))
             id_readable = item['idReadable']
             description = item['description']
             summary: str = item['summary'] if item['summary'] is not None else "--no summary--"
             issue = Issue(id=id_readable, summary=summary, description=description,
                           url=self.create_issue_url(id_readable))
             issues.append(issue)
-            self.print(id=id_readable, summary=summary, url=issue.url)
         return issues
 
     def get_issues_matching_filter(self, actual_user_input: str) -> Sequence[Issue]:
@@ -137,4 +135,5 @@ class Api:
         json_response = self.read_response(issues_request)
         self.dbg("parsing issues result")
         issues = self.parse_list_of_issues_result(json_response)
+        self.dbg(f'{len(issues)} issues retrieved.')
         return issues

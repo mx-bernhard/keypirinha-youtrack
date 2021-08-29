@@ -18,28 +18,30 @@ ICON_KEY_DEFAULT = "youtrack"
 
 
 class YouTrackServer():
-    KEYWORD_DEFAULT: str = "youtrack"
     NAME_DEFAULT: str = "YouTrack"
     LABEL_DEFAULT: str = "YouTrack"
     LEGACY_API_DEFAULT: bool = False
 
     suggestion_mode: SuggestionMode = SuggestionMode.Filter
 
-    def __init__(self, plugin, name: str, max_results: int, max_search_results: int):
+    def __init__(self, plugin, name: str, max_results: int):
         self.reset()
         self.plugin = plugin
         self.name = name
         self.max_results = max_results
-        self.max_search_results = max_search_results
 
         self.filter_icon = ICON_KEY_DEFAULT
         self.issues_icon = ICON_KEY_DEFAULT
-        self.keyword = self.KEYWORD_DEFAULT
+        self.filter_label = self.LABEL_DEFAULT
+        self.issues_label = self.LABEL_DEFAULT
+        self.show_filter_history_entry = False
+        self.show_issues_history_entry = False
+        self.show_filter_entry = True
+        self.show_issues_entry = True
 
     def reset(self):
         self.filter_icon = ICON_KEY_DEFAULT
         self.issues_icon = ICON_KEY_DEFAULT
-        self.keyword = self.KEYWORD_DEFAULT
         self.max_results = 100
         self.api = None
         self.filter_prefix = ""
@@ -57,20 +59,25 @@ class YouTrackServer():
             youtrack_url = settings.get("base_url", section, None)
             api_token = settings.get("api_token", section, None)
             self.legacy_api = settings.get("legacy_api", section, False)
-            actual_max_results = self.max_results if self.max_results == self.max_search_results else self.max_search_results
+            self.show_filter_history_entry = settings.get_bool("show_filter_history_entry", section, False)
+            self.show_issues_history_entry = settings.get_bool("show_issues_history_entry", section, False)
+            self.show_filter_entry = settings.get_bool("show_filter_entry", section, True)
+            self.show_issues_entry = settings.get_bool("show_issues_entry", section, True)
+            always_visible_issues_items = 1 + (1 if self.show_issues_history_entry else 0) + (
+                1 if self.show_issues_entry else 0)
+            actual_max_results = self.max_results - always_visible_issues_items
             self.api = \
                 Api(api_token=api_token, youtrack_url=youtrack_url, dbg=self.dbg, max_results=actual_max_results) \
-                if not self.legacy_api \
-                else LegacyApi(api_token=api_token, youtrack_url=youtrack_url, dbg=self.dbg, max_results=actual_max_results)
+                    if not self.legacy_api \
+                    else LegacyApi(api_token=api_token, youtrack_url=youtrack_url, dbg=self.dbg,
+                                   max_results=actual_max_results)
             self.filter_label = settings.get("filter_label", section, self.LABEL_DEFAULT)
             self.issues_label = settings.get("issues_label", section, self.LABEL_DEFAULT)
-            self.name = settings.get("name", section, self.NAME_DEFAULT)
             self.filter_icon = settings.get("filter_icon", section, ICON_KEY_DEFAULT)
             self.issues_icon = settings.get("issues_icon", section, ICON_KEY_DEFAULT)
-            self.keyword = settings.get("keyword", section, self.KEYWORD_DEFAULT)
             dont_append = settings.get_bool("filter_dont_append_whitespace", section, False)
             self.filter_prefix = settings.get("filter", section, "") + ("" if dont_append else " ")
-            self.print(filter_prefix=self.filter_prefix)
+            self.print(filter_prefix=self.filter_prefix, issues_label=self.issues_label)
 
     def on_suggest(self, user_input: str, items_chain: Sequence):
         self.dbg('on_suggest')
@@ -79,16 +86,19 @@ class YouTrackServer():
             return []
 
         initial_item = items_chain[0]
-        current_items = items_chain[1:len(items_chain)]
         current_suggestion_type: SuggestionMode = self.get_current_suggestion_mode(items_chain)
         suggestions = []
         actual_user_input = self.filter_prefix if len(items_chain) == 1 else ""
-        previous_effective_value = ""
-        if len(current_items) > 0:
-            current_item = current_items[-1]
-            previous_effective_value = kpu.kwargs_decode(current_item.data_bag())['effective_value']
-            actual_user_input += previous_effective_value + ' '
-        actual_user_input += user_input
+        try:
+            current_item = items_chain[-1]
+            decoded = kpu.kwargs_decode(current_item.data_bag())
+            previous_effective_value = str.rstrip(decoded['effective_value'])
+        except:
+            previous_effective_value = ""
+        self.print(previous_effective_value=previous_effective_value, user_input=user_input)
+        actual_user_input += str.strip(previous_effective_value) + ' '
+        actual_user_input += str.strip(user_input)
+        actual_user_input = str.strip(actual_user_input)
         self.print(actual_user_input=actual_user_input, user_input=user_input)
         self.print(is_filter=str(current_suggestion_type))
         if current_suggestion_type == SuggestionMode.Filter:
@@ -126,6 +136,7 @@ class YouTrackServer():
         return SuggestionMode.Filter if reduced == self.plugin.ITEMCAT_FILTER else SuggestionMode.Issues
 
     def add_filter_suggestions(self, actual_user_input, suggestions) -> None:
+        self.dbg(f'actual_user_input: {actual_user_input}')
         api_result_suggestions = self.api.get_suggestions(actual_user_input)
         # the first displays the current filter so far
         first = True
@@ -151,13 +162,20 @@ class YouTrackServer():
                 icon_handle=self.plugin._icons[self.filter_icon],
                 loop_on_suggest=True,
                 data_bag=data_bag_encoded))
+        if self.show_filter_history_entry:
+            self.add_filter_entry(actual_user_input, suggestions, True)
+        if self.show_filter_entry:
+            self.add_filter_entry(actual_user_input, suggestions, False)
+
+    def add_filter_entry(self, actual_user_input, suggestions, is_history):
         suggestions.insert(0, self.plugin.create_item(
             category=self.plugin.ITEMCAT_FILTER,
-            label=self.filter_label + "▶" + actual_user_input,
-            short_desc="Open",
-            target=actual_user_input,
+            # only history items' label is searched, so make it contain something useful
+            label=self.filter_label + " ▶ " + actual_user_input,
+            short_desc="Open" + (" • add to history" if is_history else ""),
+            target=kpu.kwargs_encode(server=self.name, effective_value=actual_user_input, is_history=is_history),
             args_hint=kp.ItemArgsHint.FORBIDDEN,
-            hit_hint=kp.ItemHitHint.KEEPALL,
+            hit_hint=kp.ItemHitHint.KEEPALL if is_history else kp.ItemHitHint.IGNORE,
             icon_handle=self.plugin._icons[self.filter_icon],
             loop_on_suggest=False,
             data_bag=(kpu.kwargs_encode(url=self.api.create_issues_url(actual_user_input),
@@ -166,22 +184,26 @@ class YouTrackServer():
     def add_issues_matching_filter(self, actual_user_input: str, suggestions: Sequence) -> None:
         self.dbg("add_issues_matching_filter for " + actual_user_input)
         api_result_suggestions = self.get_issues_matching_filter(actual_user_input)
-        for res in api_result_suggestions[:self.max_search_results]:
-            suggestions.append(res)
-        desc: str = actual_user_input
 
-        if len(api_result_suggestions) > self.max_search_results:
-            desc = actual_user_input + " (more than " + str(self.max_search_results) + " issues found, only showing the top issues)"
+        if len(api_result_suggestions) > self.max_results:
+            amt = str(self.max_results) + "+ issues"
         else:
-            desc = actual_user_input + " (" + str(len(api_result_suggestions)) + " issues found)"
+            amt = str(len(api_result_suggestions)) + " issues"
+        if self.show_issues_entry:
+            self.add_issues_entry(actual_user_input, amt, suggestions, False)
+        if self.show_issues_history_entry:
+            self.add_issues_entry(actual_user_input, amt, suggestions, True)
+        for res in api_result_suggestions[:self.max_results]:
+            suggestions.append(res)
 
-        suggestions.insert(0, self.plugin.create_item(
+    def add_issues_entry(self, actual_user_input, amt, suggestions, is_history):
+        suggestions.append(self.plugin.create_item(
             category=self.plugin.ITEMCAT_ISSUES,
-            label=actual_user_input,
-            short_desc=desc,
-            target=actual_user_input,
+            label=self.issues_label + " ▶ " + actual_user_input,
+            short_desc=amt + (" • add to history" if is_history else ""),
+            target=kpu.kwargs_encode(server=self.name, effective_value=actual_user_input, is_history=is_history),
             args_hint=kp.ItemArgsHint.ACCEPTED,
-            hit_hint=kp.ItemHitHint.IGNORE,
+            hit_hint=kp.ItemHitHint.KEEPALL if is_history else kp.ItemHitHint.IGNORE,
             icon_handle=self.plugin._icons[self.issues_icon],
             loop_on_suggest=True,
             data_bag=(kpu.kwargs_encode(url=self.api.create_issues_url(actual_user_input),
