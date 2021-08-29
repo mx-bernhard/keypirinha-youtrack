@@ -55,7 +55,6 @@ class YouTrack(kp.Plugin):
             "idle_time", self.CONFIG_SECTION_MAIN,
             fallback=self.DEFAULT_IDLE_TIME, min=0.25, max=3)
 
-
         self.servers = {}
 
         for section in settings.sections():
@@ -91,7 +90,6 @@ class YouTrack(kp.Plugin):
                 self.warn(str(exc))
                 self.warn("Server [{}] skipped due to error".format(section))
                 continue
-
 
     def _init_actions(self):
         self.dbg('_init_actions')
@@ -189,7 +187,6 @@ class YouTrack(kp.Plugin):
 
         self.set_suggestions(server_suggestions, kp.Match.ANY, kp.Sort.NONE)
 
-
     def on_execute(self, item, action):
         self.dbg('on_execute')
 
@@ -235,14 +232,16 @@ class YouTrack(kp.Plugin):
         config_icon_path = os.path.join(keypirinha.user_config_dir(), self.RES_ICON_CONFIG_PATH.format(name=name))
         cache_dir = keypirinha.package_cache_dir(full_name)
         # create package dir in cache dir
-        try: os.makedirs(cache_dir)
-        except: pass
+        try:
+            os.makedirs(cache_dir)
+        except:
+            pass
 
         # copy to cache so that cache:// works
         try:
             shutil.copy(config_icon_path, cache_dir)
-            package_path = self.CACHE_ICON_CONFIG_PATH.format(package=full_name,name=name)
+            package_path = self.CACHE_ICON_CONFIG_PATH.format(package=full_name, name=name)
         except Exception as e:
-            self.dbg("Could not copy {file} to cache {cache} ".format(file=config_icon_path,cache=cache_dir) )
+            self.dbg("Could not copy {file} to cache {cache} ".format(file=config_icon_path, cache=cache_dir))
 
         return self.load_icon([config_icon_path, package_path])

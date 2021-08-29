@@ -84,7 +84,7 @@ class YouTrackServer():
         suggestions = []
         actual_user_input = self.filter_prefix if len(items_chain) == 1 else ""
         previous_effective_value = ""
-        if (len(current_items) > 0):
+        if len(current_items) > 0:
             current_item = current_items[-1]
             previous_effective_value = kpu.kwargs_decode(current_item.data_bag())['effective_value']
             actual_user_input += previous_effective_value + ' '
