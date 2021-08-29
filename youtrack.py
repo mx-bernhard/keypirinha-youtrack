@@ -34,7 +34,7 @@ class YouTrack(kp.Plugin):
     def __init__(self):
         self.dbg('__init__')
         super().__init__()
-        self._debug = True
+        self._debug = False
         self._icons = {}
 
     def __del__(self):
